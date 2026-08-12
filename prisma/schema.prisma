@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  passwordHash String
+  sessionToken String?   @unique
+  createdAt    DateTime  @default(now())
+  bookings     Booking[]
+}
+
+model Event {
+  id        Int       @id @default(autoincrement())
+  name      String
+  date      DateTime
+  createdAt DateTime  @default(now())
+  seats     Seat[]
+  bookings  Booking[]
+}
+
+
+model Seat {
+  id         Int      @id @default(autoincrement())
+  eventId    Int
+  seatNumber String
+  row        String
+  column     Int
+  isBlocked  Boolean  @default(false)
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  bookings   Booking[]
+
+  @@unique([eventId, seatNumber])
+  @@index([eventId])
+}
+
+model Booking {
+  id         Int      @id @default(autoincrement())
+  eventId    Int
+  seatId     Int
+  bookerName String
+  bookerEmail String
+  userId     Int?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  seat       Seat    @relation(fields: [seatId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, seatId])
+  @@index([eventId])
+}
